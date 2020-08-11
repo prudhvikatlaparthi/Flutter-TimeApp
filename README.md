@@ -1,16 +1,12 @@
-# timeapp
+# 🕐 Timeapp
 
 World time app
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+This project is developed using the Dart&Flutter this is a Cross platform application.
 
-A few resources to get you started if this is your first Flutter project:
+# API http://worldtimeapi.org/api/timezone/
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+![Home Page](https://drive.google.com/file/d/1b4LG2BI2v0d4pUbyLc4_4IKz38lbsEv-/view)
