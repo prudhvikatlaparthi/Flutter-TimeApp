@@ -2,9 +2,15 @@ import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:timeapp/model/time.dart';
 import 'package:timeapp/networking/http-networking.dart';
+import 'package:timeapp/screens/widgets/bottom-sheet.dart';
+import 'package:timeapp/screens/widgets/clock.dart';
+import 'package:timeapp/screens/widgets/countries-list.dart';
+import 'package:timeapp/screens/widgets/my-appbar.dart';
+import 'package:timeapp/screens/widgets/time-view.dart';
 
 final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
@@ -19,33 +25,26 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String timeT;
-  bool isLoading = true;
-  bool isListLoading = false;
-  List zonesList = [];
-  bool isDay = true;
-  String selectedLocation = 'Asia/Kolkata';
-  int selectedLocationIndex = 197;
-  void setupWorldTime() async {
-    setState(() {
-      timeT = null;
-      isLoading = true;
-    });
-    HttpCalls instance = HttpCalls(location: '', url: selectedLocation);
-    dynamic t = await instance.doCallTime();
+  Time value;
+  Future<Function> setupWorldTime() async {
+    if (value != null) {
+      value.time = null;
+      value.isLoading = true;
+    }
+    HttpCalls instance =
+        HttpCalls(url: value == null ? 'Asia/Kolkata' : value.selectedLocation);
+    Time t = await instance.doCallTime();
     if (t != null && t.time != null) {
-      setState(() {
-        isLoading = false;
-        timeT = t.time;
-        isDay = t.isDaytime;
-      });
+      value.time = t.time;
+      value.isLoading = false;
+      value.isDay = t.isDay;
+      value.dateTime = t.dateTime;
     } else {
       showInSnackBar("Error try again later");
-      setState(() {
-        isLoading = false;
-        timeT = '0.00';
-        isDay = true;
-      });
+      value.time = '0.00';
+      value.dateTime = DateTime.now();
+      value.isDay = true;
+      value.isLoading = false;
     }
   }
 
@@ -64,206 +63,87 @@ class _HomeScreenState extends State<HomeScreen> {
     setupWorldTime();
   }
 
+  // Function fetchData() {
+  //   setupWorldTime();
+  // }
+
+  Function showMyBottomSheet() {
+    _settingModalBottomSheet(value, context);
+  }
+
   @override
   Widget build(BuildContext context) {
+    value = Provider.of<Time>(context);
     return Scaffold(
       key: _scaffoldKey,
       body: Stack(
         children: <Widget>[
           Scaffold(
-              backgroundColor: Colors.transparent,
-              appBar: AppBar(
-                elevation: 0,
-                backgroundColor: Colors.transparent,
-                centerTitle: true,
-                title: Padding(
-                  padding: EdgeInsets.only(top: 5),
-                  child: Text('Time App',
-                      style: GoogleFonts.roboto(
-                        color: isDay ? Color(0XFF142F38) : Colors.white,
-                        fontSize: 30,
-                        fontWeight: FontWeight.w600,
-                      )),
+            backgroundColor: Colors.transparent,
+            appBar: MyAppBar(
+              value: value,
+              fetchData: setupWorldTime,
+            ),
+            extendBodyBehindAppBar: true,
+            body: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: value.isDay
+                      ? AssetImage('images/day.jpg')
+                      : AssetImage('images/night.jpg'),
+                  fit: BoxFit.cover,
                 ),
-                actions: <Widget>[
-                  IconButton(
-                    icon: Icon(Icons.refresh),
-                    onPressed: () {
-                      setupWorldTime();
-                    },
-                    iconSize: 30,
-                  ),
-                ],
               ),
-              extendBodyBehindAppBar: true,
-              body: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: isDay
-                        ? AssetImage('images/day.jpg')
-                        : AssetImage('images/night.jpg'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      CupertinoButton(
-                          child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: <Widget>[
-                                if (isListLoading)
-                                  SpinKitFadingCube(
-                                    color: Colors.white,
-                                    size: 20.0,
-                                  ),
-                                SizedBox(
-                                  width: 20,
-                                ),
-                                RichText(
-                                  text: TextSpan(
-                                    text: 'Tap',
-                                    style: GoogleFonts.roboto(
-                                        fontSize: 25,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                    children: <TextSpan>[
-                                      TextSpan(
-                                          text: ' to change Location',
-                                          style: GoogleFonts.roboto(
-                                              fontSize: 25,
-                                              fontWeight: FontWeight.bold,
-                                              color: isDay
-                                                  ? Color(0XFF142F38)
-                                                  : Colors.white)),
-                                    ],
-                                  ),
-                                ),
-                              ]),
-                          onPressed: () {
-                            _settingModalBottomSheet(context);
-                          }),
-                      if (selectedLocation != null)
-                        Text(
-                          selectedLocation,
-                          style: GoogleFonts.ubuntu(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 30,
-                              color: Colors.white),
-                        ),
-                      Container(
-                        padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: <Widget>[
-                            if (isLoading)
-                              SpinKitFadingCube(
-                                color: Colors.white,
-                                size: 20.0,
-                              ),
-                            SizedBox(
-                              width: 20,
-                            ),
-                            Text(
-                              timeT == null ? "Loading" : timeT,
-                              style: timeT == null
-                                  ? GoogleFonts.roboto(
-                                      letterSpacing: 2,
-                                      fontSize: 25,
-                                      fontWeight: FontWeight.bold,
-                                      color:
-                                          isDay ? Colors.black : Colors.white)
-                                  : TextStyle(
-                                      fontFamily: 'itc',
-                                      letterSpacing: 2,
-                                      fontSize: 50,
-                                      color:
-                                          isDay ? Colors.black : Colors.white),
-                            ),
-                          ],
-                        ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 0.0, sigmaY: 0.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    CountriesList(
+                        value: value, showMyBottomSheet: showMyBottomSheet),
+                    if (value.selectedLocation != null)
+                      Text(
+                        value.selectedLocation,
+                        style: GoogleFonts.ubuntu(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 30,
+                            color: Colors.white),
                       ),
-                    ],
-                  ),
+                    ClockView(
+                      dateTime: value.dateTime != null
+                          ? value.dateTime
+                          : DateTime.now(),
+                    ),
+                    TimeView(value: value),
+                  ],
                 ),
-              )),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  void _settingModalBottomSheet(context) async {
-    if (zonesList == null || zonesList.length == 0) {
-      setState(() {
-        isListLoading = true;
-      });
-      zonesList = await getZones();
-      setState(() {
-        isListLoading = false;
-      });
+  void _settingModalBottomSheet(value, context) async {
+    if (value.zonesList == null || value.zonesList.length == 0) {
+      value.isListLoading = true;
+      value.zonesList = await getZones();
+      value.isListLoading = false;
     }
-    if (zonesList == null || zonesList.length == 0) {
+    if (value.zonesList == null || value.zonesList.length == 0) {
       showInSnackBar("Error try again later.");
       return;
     }
-    // selectedLocation = zonesList[index];
-    zonesList.remove(selectedLocation);
-    zonesList.insert(0, selectedLocation);
-    selectedLocationIndex = 0;
+    value.zonesList.remove(value.selectedLocation);
+    value.zonesList.insert(0, value.selectedLocation);
+    value.selectedLocationIndex = 0;
     showModalBottomSheet(
         context: context,
-        builder: (BuildContext cc) => Container(
-              color: Colors.blue[50],
-              child: Scrollbar(
-                child: ListView.builder(
-                  scrollDirection: Axis.vertical,
-                  itemCount: zonesList.length,
-                  itemBuilder: (context, index) => Column(
-                    children: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Card(
-                          child: ListTile(
-                            leading: IconButton(
-                              icon: Icon(Icons.done),
-                              onPressed: () {
-                                itemClickListener(index);
-                              },
-                              color: selectedLocationIndex == index
-                                  ? Colors.black
-                                  : Colors.black38,
-                            ),
-                            title: Text(zonesList[index],
-                                style: GoogleFonts.roboto(
-                                  color: selectedLocationIndex == index
-                                      ? Colors.black
-                                      : Colors.black38,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                )),
-                            onTap: () {
-                              itemClickListener(index);
-                            },
-                          ),
-                        ),
-                      ),
-                      // Divider(),
-                    ],
-                  ),
-                ),
-              ),
+        builder: (BuildContext cc) => MyBottomSheetView(
+              value: value,
+              fetchData: setupWorldTime,
             ));
-  }
-
-  void itemClickListener(int index) {
-    Navigator.pop(context);
-    selectedLocationIndex = index;
-    selectedLocation = zonesList[index];
-    setupWorldTime();
   }
 }
