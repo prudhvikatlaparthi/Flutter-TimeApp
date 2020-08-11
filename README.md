@@ -8,5 +8,6 @@ This project is developed using the Dart&Flutter this is a Cross platform applic
 
 # API http://worldtimeapi.org/api/timezone/
 
+<img src="https://github.com/prudhvikatlaparthi/Flutter-TimeApp/blob/master/device-2020-08-11-153720.png" width="480" height="800">
 
-![Home Page](https://drive.google.com/file/d/1b4LG2BI2v0d4pUbyLc4_4IKz38lbsEv-/view)
+<img src="https://github.com/prudhvikatlaparthi/Flutter-TimeApp/blob/master/device-2020-08-11-153501.png" width="480" height="800">
